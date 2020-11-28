@@ -43,7 +43,7 @@ namespace SharmaScraper {
             try {
                 await Login(email, password);
 
-                for (var i=0; i<7; i++) {
+                for (var i=0; i<=7; i++) {
                     await GetDay(DateTime.Now.Date.AddDays(i));
                 }
 
