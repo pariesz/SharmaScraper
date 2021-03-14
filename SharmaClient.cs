@@ -13,7 +13,7 @@ using HtmlAgilityPack;
 
 namespace SharmaScraper {
     public class SharmaClient : IDisposable {
-        public static TimeSpan MaxBookingTime = new TimeSpan(7, 13, 0);
+        public static TimeSpan ReservationsReleasedSpan = new TimeSpan(7, 13, 0, 0);
 
         const string ReservationType = "58";
         const string PunchCardPaymentId = "977";
@@ -61,7 +61,7 @@ namespace SharmaScraper {
             return result;
         }
 
-        public async Task BookNext(DateTime utcDate, CancellationToken ct = default) {
+        public async Task BookNextReservation(DateTime utcDate, CancellationToken ct = default) {
             var date = TimeZoneInfo.ConvertTimeFromUtc(utcDate, tz.Value);
             var times = await GetTimes(date.Date, ct);
             var time = times.Aggregate((result, next) => result > date ? result : next);

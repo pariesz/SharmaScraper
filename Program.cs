@@ -30,8 +30,6 @@ namespace SharmaScraper {
             await WriteReservations(reservations, config.Output);
         }
 
-        
-
         static async Task WriteReservations(IEnumerable<Reservation> reservations, string filePath) {
             var lines = reservations
                 .OrderBy(x => x.Time).Select(x => $"{x.Time:ddd dd/MM hh:mm},{x.Info}")

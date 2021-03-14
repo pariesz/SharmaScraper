@@ -2,9 +2,8 @@
 
 ## Automated Bookings
 
-When execture from the `LambdaEntryPoint` the next available booking
-7 days and 13 hours from the current time (when bookings are released)
-will be booked.
+When `LambdaEntryPoint` is executed it will book the next availability
+7 days and 13 hours from the current time - when bookings are released.
 
 ## Deploying to AWS Lambda
 
