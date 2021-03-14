@@ -2,7 +2,7 @@
     "profiles": {
         "Run": {
             "commandName": "Project",
-            "commandLineArgs": "../../../results.csv"
+            "commandLineArgs": "--output ../../../results.csv"
         }
     }
 }

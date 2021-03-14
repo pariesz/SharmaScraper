@@ -1,0 +1,11 @@
+dotnet lambda deploy-function `
+    --profile "personal" `
+    --region "eu-west-3" `
+    --configuration "Release" `
+    --framework "netcoreapp3.1" `
+    --function-description "Automated sharma climbing gym bookings" `
+    --function-runtime "dotnetcore3.1" `
+    --function-handler "SharmaScraper::SharmaScraper.LambdaEntryPoint::FunctionHandlerAsync" `
+    --function-name "SharmaScraper" `
+    --function-timeout 600 `
+    --function-memory-size 256
