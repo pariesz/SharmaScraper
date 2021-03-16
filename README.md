@@ -13,7 +13,7 @@ When `LambdaEntryPoint` is executed it will book the next availability
 
 ## CloudWatch events cron expressions
 
-`45 5 ? * TUE,THU *`
+`45 4 ? * TUE,THU *`
 
-Every Tuesday and Thursday at 5:45AM.
-This will attempt to book the next session after 6:45PM the same weekday of next week.
+Every Tuesday and Thursday at 4:45AM GMT.
+This will attempt to book the next session after 6:45PM CEST the same weekday of next week.
