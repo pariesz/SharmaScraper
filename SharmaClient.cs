@@ -6,27 +6,33 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
 
 namespace SharmaScraper {
+
+
     public class SharmaClient : IDisposable {
         public static TimeSpan ReservationsReleasedSpan = new TimeSpan(7, 13, 0, 0);
 
-        const string ReservationType = "58";
-        const string PunchCardPaymentId = "977";
-
-        static readonly Encoding htmlEncoding = Encoding.GetEncoding("iso-8859-1");
-        static readonly Regex startDateRegex = new Regex(@"""start"":{""DateTime"":new Date\(([0-9,]+)\)");
-        static readonly Lazy<TimeZoneInfo> tz = new Lazy<TimeZoneInfo>(() => {
+        public static readonly Lazy<TimeZoneInfo> TZ = new Lazy<TimeZoneInfo>(() => {
             try {
                 return TimeZoneInfo.FindSystemTimeZoneById("W. Europe Standard Time");
             } catch {
                 return TimeZoneInfo.FindSystemTimeZoneById("Europe/Madrid");
             }
         });
+
+        const string ReservationType = "58";
+        const string PunchCardPaymentId = "977";
+        const string NewReservationFormId = "newreservation";
+        const string PaymentFormId = "paymentForm";
+
+        static readonly Encoding htmlEncoding = Encoding.GetEncoding("iso-8859-1");
+        static readonly Regex startDateRegex = new Regex(@"""start"":{""DateTime"":new Date\(([0-9,]+)\)");
 
         readonly CookieContainer cookieContainer;
         readonly HttpClientHandler httpHandler;
@@ -63,21 +69,30 @@ namespace SharmaScraper {
 
         public async Task BookNextReservation(DateTime date, bool mock = false, CancellationToken ct = default) {
             if (date.Kind == DateTimeKind.Utc) {
-                date = TimeZoneInfo.ConvertTimeFromUtc(date, tz.Value);
+                date = TimeZoneInfo.ConvertTimeFromUtc(date, TZ.Value);
             }
 
-            var times = await GetTimes(date.Date, ct);
-            var time = times.Aggregate((result, next) => result > date ? result : next);
-            var reservation = await GetReservation(time, ct);
+            var reservation = await GetReservation(date, ct);
             if (reservation.Form == null) {
-                throw new Exception("Unable to retrieve newreservation values.");
+
+                var times = await GetTimes(date.Date, ct);
+                if (!times.Any()) {
+                    throw new NoTimesException($"{date:yyyy-MM-dd} has no available times.");
+                }
+
+                var time = times.FirstOrDefault(x => x == date);
+                if (time == default) {
+                    throw new NoTimesException($"{JsonSerializer.Serialize(times)} does not contain {date}.");
+                }
+
+                throw new Exception($"Unable to retrieve '{NewReservationFormId}' form values.");
             }
 
             var response = await PostAsync("/customerZone/newReservationPost", reservation.Form, ct: ct);
             var paymentUri = response.RequestMessage.RequestUri.ToString();
-            var paymentForm = await ScrapeFormValues(response, "paymentForm");
+            var paymentForm = await ScrapeFormValues(response, PaymentFormId);
             if (paymentForm == null) {
-                throw new Exception("Unable to retrieve paymentForm values.");
+                throw new Exception($"Unable to retrieve '{PaymentFormId}' form values.");
             }
 
             paymentForm["idPaymentMethod"] = PunchCardPaymentId;         
@@ -92,7 +107,7 @@ namespace SharmaScraper {
 
         public async Task<List<Reservation>> GetReservations(CancellationToken ct) {
             var results = new List<Reservation>();
-            var now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tz.Value);
+            var now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TZ.Value);
 
             for (var i = 0; i <= 7; i++) {
                 if (ct.IsCancellationRequested) {
@@ -134,7 +149,7 @@ namespace SharmaScraper {
             return new Reservation {
                 Time = time,
                 Info = ScrapeReservationGeneralInfo(doc),
-                Form = ScrapeFormValues(doc, "newreservation")
+                Form = ScrapeFormValues(doc, NewReservationFormId)
             };
         }
 
@@ -154,11 +169,13 @@ namespace SharmaScraper {
             
             sb.Append("POST ");
             sb.Append(url);
-            
+            sb.Append(' ');
+
             if (!secure) {
-                sb.Append(" {");
+                sb.Append('{');
                 sb.Append(string.Join(",", formValues.Select(kv => $"{kv.Key}:{kv.Value}")));
-                sb.Append("} ");
+                sb.Append('}');
+                sb.Append(' ');
             }
 
             Console.Write(sb.ToString());
@@ -178,7 +195,7 @@ namespace SharmaScraper {
 
         static string ScrapeReservationGeneralInfo(HtmlDocument doc) {
             var generalInfo = doc
-                .GetElementbyId("newreservation")?
+                .GetElementbyId(NewReservationFormId)?
                 .SelectSingleNode("//div[contains(@class, 'generalInfo')]");
 
             var text = generalInfo?.InnerText.Trim() ?? string.Empty;
@@ -214,7 +231,7 @@ namespace SharmaScraper {
             var doc = LoadHtmlDocument(stream);
 
             WriteDebug("GENERAL INFO", ScrapeReservationGeneralInfo(doc));
-            WriteDebug("FORM VALUES", ScrapeFormValues(doc, "newreservation"));
+            WriteDebug("FORM VALUES", ScrapeFormValues(doc, NewReservationFormId));
             WriteDebug("GET TIME PERIOD", DeserializeDay(File.ReadAllText(downloads + "getTimePeriod.js")));
         }
 

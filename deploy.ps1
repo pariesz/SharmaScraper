@@ -7,5 +7,5 @@ dotnet lambda deploy-function `
     --function-runtime "dotnetcore3.1" `
     --function-handler "SharmaScraper::SharmaScraper.LambdaEntryPoint::FunctionHandlerAsync" `
     --function-name "SharmaScraper" `
-    --function-timeout 600 `
+    --function-timeout 900 `
     --function-memory-size 256

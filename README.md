@@ -3,7 +3,7 @@
 ## Automated Bookings
 
 When `LambdaEntryPoint` is executed it will book the next availability
-7 days and 13 hours from the current time - when bookings are released.
+7 days from running at the specified time (Default: 19:00).
 
 ## Deploying to AWS Lambda
 
@@ -16,13 +16,14 @@ When `LambdaEntryPoint` is executed it will book the next availability
 `45 4 ? * TUE,THU *`
 
 Every Tuesday and Thursday at 4:45AM GMT.
-This will attempt to book the next session after 6:45PM CEST the same weekday of next week.
+This will attempt to book the 7PM session of the same weekday of next week.
 
 ## Test lambda payload
 
 ```json
 {
-    "Date": "2021-03-25T18:45:00",
-    "Mock": true
+  "Date": "2021-03-25",
+  "Time": "19:00:00",
+  "Mock": true
 }
 ```
