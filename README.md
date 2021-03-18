@@ -17,3 +17,12 @@ When `LambdaEntryPoint` is executed it will book the next availability
 
 Every Tuesday and Thursday at 4:45AM GMT.
 This will attempt to book the next session after 6:45PM CEST the same weekday of next week.
+
+## Test lambda payload
+
+```json
+{
+    "Date": "2021-03-25T18:45:00",
+    "Mock": true
+}
+```

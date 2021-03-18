@@ -46,7 +46,7 @@ namespace SharmaScraper {
                 ["password"] = password,
                 ["safari"] = "",
                 ["url"] = "/customerzone"
-            }, ct);
+            }, secure: true, ct: ct);
         }
 
         public async Task<IEnumerable<DateTime>> GetTimes(DateTime date, CancellationToken ct) {
@@ -54,15 +54,18 @@ namespace SharmaScraper {
                 ["sDate"] = date.ToString("yyyy-MM-dd"),
                 ["type"] = ReservationType,
                 ["checktype"] = "false"
-            }, ct);
+            }, ct: ct);
 
             var json = await response.Content.ReadAsStringAsync();
             var result = DeserializeDay(json).Select(time => date.Add(time.TimeOfDay));
             return result;
         }
 
-        public async Task BookNextReservation(DateTime utcDate, CancellationToken ct = default) {
-            var date = TimeZoneInfo.ConvertTimeFromUtc(utcDate, tz.Value);
+        public async Task BookNextReservation(DateTime date, bool mock = false, CancellationToken ct = default) {
+            if (date.Kind == DateTimeKind.Utc) {
+                date = TimeZoneInfo.ConvertTimeFromUtc(date, tz.Value);
+            }
+
             var times = await GetTimes(date.Date, ct);
             var time = times.Aggregate((result, next) => result > date ? result : next);
             var reservation = await GetReservation(time, ct);
@@ -70,19 +73,21 @@ namespace SharmaScraper {
                 throw new Exception("Unable to retrieve newreservation values.");
             }
 
-            var response = await PostAsync("/customerZone/newReservationPost", reservation.Form, ct);
+            var response = await PostAsync("/customerZone/newReservationPost", reservation.Form, ct: ct);
             var paymentUri = response.RequestMessage.RequestUri.ToString();
             var paymentForm = await ScrapeFormValues(response, "paymentForm");
             if (paymentForm == null) {
                 throw new Exception("Unable to retrieve paymentForm values.");
             }
 
-            paymentForm["idPaymentMethod"] = PunchCardPaymentId;
-            
-            WritePost(paymentUri, paymentForm);
-            Console.WriteLine("SIMULATED");
+            paymentForm["idPaymentMethod"] = PunchCardPaymentId;         
 
-            await PostAsync(paymentUri, paymentForm, ct);
+            if (mock) {
+                WritePost(paymentUri, paymentForm);
+                Console.WriteLine("MOCK");
+            } else {
+                await PostAsync(paymentUri, paymentForm, ct: ct);
+            }
         }
 
         public async Task<List<Reservation>> GetReservations(CancellationToken ct) {
@@ -121,7 +126,7 @@ namespace SharmaScraper {
                 ["hour"] = time.ToString("HH:mm"),
                 ["type"] = ReservationType,
                 ["duration"] = "120"
-            }, ct);
+            }, ct: ct);
 
             using var stream = await response.Content.ReadAsStreamAsync();
             var doc = LoadHtmlDocument(stream);
@@ -133,8 +138,8 @@ namespace SharmaScraper {
             };
         }
 
-        public async Task<HttpResponseMessage> PostAsync(string url, Dictionary<string, string> formValues, CancellationToken ct) {
-            WritePost(url, formValues);
+        public async Task<HttpResponseMessage> PostAsync(string url, Dictionary<string, string> formValues, bool secure = false, CancellationToken ct = default) {
+            WritePost(url, formValues, secure);
             var content = new FormUrlEncodedContent(formValues);
             var response = await httpClient.PostAsync(url, content, ct);
 
@@ -144,9 +149,19 @@ namespace SharmaScraper {
             return response;
         }
 
-        static void WritePost(string url, Dictionary<string, string> formValues) {
-            var valuesString = "{" + string.Join(",", formValues.Select(kv => $"{kv.Key}:{kv.Value}")) + "}";
-            Console.Write("POST: " + url + " " + valuesString + ": ");
+        static void WritePost(string url, Dictionary<string, string> formValues, bool secure = false) {
+            var sb = new StringBuilder();
+            
+            sb.Append("POST ");
+            sb.Append(url);
+            
+            if (!secure) {
+                sb.Append(" {");
+                sb.Append(string.Join(",", formValues.Select(kv => $"{kv.Key}:{kv.Value}")));
+                sb.Append("} ");
+            }
+
+            Console.Write(sb.ToString());
         }
 
         static IEnumerable<DateTime> DeserializeDay(string js) {
