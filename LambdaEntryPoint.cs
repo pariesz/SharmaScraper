@@ -9,8 +9,6 @@ using System.Threading.Tasks;
 namespace SharmaScraper {
     public class LambdaEntryPoint {
 
-        public const int MaxRetries = 24; // Try for 4 hours: 10min delay * 6 * 4
-
         public async Task<object> FunctionHandlerAsync(LambdaPayload? payload, ILambdaContext lambdaContext) {
             if (payload == null) {
                 payload = new LambdaPayload();
@@ -18,29 +16,21 @@ namespace SharmaScraper {
 
             LambdaLogger.Log(payload.ToString() + Environment.NewLine);
 
-            var dateTime = payload.GetDateTime();
             var config = new Configuration();
+            var email = config.GetEmail();
+            var password = config.GetPassowrd();
+            var dateTime = payload.GetDateTime();
+
             using (var client = new SharmaClient()) {
-                await client.Login(config.GetEmail(), config.GetPassowrd());
+                await client.Login(email, password);
 
                 try {
                     await client.BookNextReservation(dateTime, payload.Mock);
 
                 } catch (NoTimesException ex) {
                     LambdaLogger.Log(ex.Message);
-
-                    if (payload.Attempt <= MaxRetries) {
-                        await Task.Delay(TimeSpan.FromMinutes(10));
-
-                        var invokePayload = new LambdaPayload {
-                            Date = dateTime,
-                            Attempt = ++payload.Attempt,
-                            Mock = payload.Mock
-                        };
-
-                        await InvokeSelf(invokePayload, lambdaContext.FunctionName);
-                        return new { Success = false };
-                    }
+                    var invokePayload = await payload.GetNextAttempt();
+                    await InvokeSelf(invokePayload, lambdaContext.FunctionName);
 
                 } catch (Exception ex) {
                     LambdaLogger.Log(ex.Message);
