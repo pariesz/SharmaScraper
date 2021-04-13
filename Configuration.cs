@@ -44,7 +44,7 @@ namespace SharmaScraper {
 
             email = configuration.GetSection("email").Value;
             password = configuration.GetSection("password").Value;
-            paymentTypeId = configuration.GetSection("paymentTypeId").Value;
+            paymentTypeId = configuration.GetSection("paymentTypeId").Value ?? "977";
             Output = configuration.GetSection("output").Value ?? "./results.csv";
         }
     }
