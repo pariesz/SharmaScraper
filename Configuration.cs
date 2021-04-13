@@ -6,6 +6,10 @@ namespace SharmaScraper {
         private string? email;
         private string? password;
 
+        // 977 is Bono (10 pack)
+        // 969 is Bono Prepago (30 day normal)
+        private string? paymentTypeId;
+
         public string Output { get; }
 
         public string GetEmail() {
@@ -24,6 +28,14 @@ namespace SharmaScraper {
             return password;
         }
 
+        public string GetPaymentTypeId() {
+            while(string.IsNullOrEmpty(paymentTypeId)) {
+                Console.Write("Payment Type Id:");
+                paymentTypeId = Console.ReadLine();
+            }
+            return paymentTypeId;
+        }
+
         public Configuration(string[]? args = null) {
             var configuration = new ConfigurationBuilder()
                 .AddEnvironmentVariables()
@@ -32,6 +44,7 @@ namespace SharmaScraper {
 
             email = configuration.GetSection("email").Value;
             password = configuration.GetSection("password").Value;
+            paymentTypeId = configuration.GetSection("paymentTypeId").Value;
             Output = configuration.GetSection("output").Value ?? "./results.csv";
         }
     }

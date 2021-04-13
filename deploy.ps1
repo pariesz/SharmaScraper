@@ -1,5 +1,5 @@
 dotnet lambda deploy-function `
-    --profile "personal" `
+    --profile "default" `
     --region "eu-west-3" `
     --configuration "Release" `
     --framework "netcoreapp3.1" `

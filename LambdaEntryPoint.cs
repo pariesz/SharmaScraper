@@ -19,13 +19,14 @@ namespace SharmaScraper {
             var config = new Configuration();
             var email = config.GetEmail();
             var password = config.GetPassowrd();
+            var paymentTypeId = config.GetPaymentTypeId();
             var dateTime = payload.GetDateTime();
 
             using (var client = new SharmaClient()) {
                 await client.Login(email, password);
 
                 try {
-                    await client.BookNextReservation(dateTime, payload.Mock);
+                    await client.BookNextReservation(dateTime, paymentTypeId, payload.Mock);
 
                 } catch (NoTimesException ex) {
                     LambdaLogger.Log(ex.Message);

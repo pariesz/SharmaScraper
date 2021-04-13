@@ -27,7 +27,6 @@ namespace SharmaScraper {
         });
 
         const string ReservationType = "58";
-        const string PunchCardPaymentId = "977";
         const string NewReservationFormId = "newreservation";
         const string PaymentFormId = "paymentForm";
 
@@ -67,7 +66,7 @@ namespace SharmaScraper {
             return result;
         }
 
-        public async Task BookNextReservation(DateTime date, bool mock = false, CancellationToken ct = default) {
+        public async Task BookNextReservation(DateTime date, string paymentTypeId, bool mock = false, CancellationToken ct = default) {
             if (date.Kind == DateTimeKind.Utc) {
                 date = TimeZoneInfo.ConvertTimeFromUtc(date, TZ.Value);
             }
@@ -95,7 +94,7 @@ namespace SharmaScraper {
                 throw new Exception($"Unable to retrieve '{PaymentFormId}' form values.");
             }
 
-            paymentForm["idPaymentMethod"] = PunchCardPaymentId;         
+            paymentForm["idPaymentMethod"] = paymentTypeId;         
 
             if (mock) {
                 WritePost(paymentUri, paymentForm);
