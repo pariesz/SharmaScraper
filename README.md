@@ -34,7 +34,7 @@ dotnet lambda deploy-function `
 aws events put-rule `
     --region "eu-west-3" `
     --name "SharmaScraper-test" `
-    --schedule-expression "cron(45 4 ? * TUE,THU *)" `
+    --schedule-expression "cron(59 5 ? * TUE,THU *)" `
     --description "Book climbing session every TUE and THU at 7:15PM" `
     --state ENABLED
 
@@ -44,9 +44,7 @@ aws events put-targets `
     --targets "Id"="1","Arn"="{lambda ARN from step 1}"
 ```
 
-**NOTE:** The cron expression `45 4 ? * TUE,THU *` will run the lambda every Tuesday and Thursday at 4:45AM GMT.
-This will attempt to book the 7:15PM CEST session of the same weekday of next week.  This does not account
-for daylight savings.
+**NOTE:** Bookings become available a week in advance at at 8AM. The cron expression `59 5 ? * TUE,THU *` will run the lambda every Tuesday and Thursday at 5:59AM GMT which is 7:59AM CEST (1 minute before bookings become available during daylight savings time).
 
 Use the target payload to configure the desired time you would like to book:
 
