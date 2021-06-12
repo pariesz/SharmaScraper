@@ -6,7 +6,8 @@ When `LambdaEntryPoint` is executed it will book the next availability
 7 days from running at the specified time (Default: 19:15).
 
 ## Requirements
-* Configuration you AWS profile: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html
+* .NET Core 3.1 SDK: https://dotnet.microsoft.com/download/dotnet/thank-you/sdk-3.1.410-windows-x64-installer
+* Configure you AWS profile: https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html
 * Install the Lambda .NET Core CLI: https://docs.aws.amazon.com/toolkit-for-visual-studio/latest/user-guide/lambda-cli-publish.html
 
 ## Deploying to AWS Lambda
