@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace SharmaScraper {
     public class LambdaPayload {
-        private static readonly TimeSpan DefaultTime = new TimeSpan(19, 0, 0); // 7PM
+        private static readonly TimeSpan DefaultTime = new TimeSpan(19, 15, 0); // 7PM
 
         public DateTime? Date { get; set; }
 
