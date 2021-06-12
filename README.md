@@ -16,7 +16,7 @@ When `LambdaEntryPoint` is executed it will book the next availability
 `45 4 ? * TUE,THU *`
 
 Every Tuesday and Thursday at 4:45AM GMT.
-This will attempt to book the 7PM session of the same weekday of next week.
+This will attempt to book the 7:15PM session of the same weekday of next week.
 
 ## Test lambda payload
 
